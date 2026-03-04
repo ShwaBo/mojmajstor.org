@@ -1,6 +1,7 @@
 "use client";
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { useUser } from "@clerk/nextjs";
 
 export default function DashboardPage() {
@@ -34,9 +35,12 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="bg-gray-50 p-4 rounded-md border border-dashed text-sm text-gray-500 flex items-center justify-center h-32">
-                                Placeholder za uređivanje profila
+                            <div className="bg-gray-50 p-4 rounded-md border text-sm text-gray-500 flex items-center justify-center h-24">
+                                Trenutni status profila (Uskoro)
                             </div>
+                            <Button className="w-full" onClick={() => console.log("Otvaram modal za uređivanje profila...")}>
+                                Uredi profil
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -49,9 +53,12 @@ export default function DashboardPage() {
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-4">
-                            <div className="bg-gray-50 p-4 rounded-md border border-dashed text-sm text-gray-500 flex items-center justify-center h-32">
-                                Placeholder za uređivanje usluga
+                            <div className="bg-gray-50 p-4 rounded-md border text-sm text-gray-500 flex items-center justify-center h-24">
+                                Trenutne usluge (Uskoro)
                             </div>
+                            <Button className="w-full" onClick={() => console.log("Otvaram panel za upravljanje uslugama...")}>
+                                Upravljaj uslugama
+                            </Button>
                         </div>
                     </CardContent>
                 </Card>

@@ -1,3 +1,7 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,6 +13,20 @@ import {
 } from "@/components/ui/select";
 
 export default function Home() {
+  const router = useRouter();
+  const [kategorija, setKategorija] = useState("");
+  const [grad, setGrad] = useState("");
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const params = new URLSearchParams();
+    if (kategorija) params.append("kategorija", kategorija);
+    if (grad) params.append("grad", grad);
+
+    router.push(`/pretraga?${params.toString()}`);
+  };
+
   return (
     <div className="min-h-[calc(100vh-4rem)] flex flex-col items-center justify-center p-4 bg-gray-50/50">
       <main className="max-w-4xl w-full flex flex-col items-center text-center gap-8 py-16">
@@ -24,12 +42,15 @@ export default function Home() {
         </div>
 
         {/* Search UI Module */}
-        <div className="w-full max-w-3xl bg-white p-4 md:p-6 rounded-2xl shadow-xl border border-gray-100 mt-8">
+        <form
+          onSubmit={handleSearch}
+          className="w-full max-w-3xl bg-white p-4 md:p-6 rounded-2xl shadow-xl border border-gray-100 mt-8"
+        >
           <div className="flex flex-col md:flex-row gap-4">
 
             {/* Category Select */}
             <div className="flex-1">
-              <Select>
+              <Select value={kategorija} onValueChange={setKategorija}>
                 <SelectTrigger className="h-14 text-base">
                   <SelectValue placeholder="Šta vam je potrebno?" />
                 </SelectTrigger>
@@ -47,16 +68,18 @@ export default function Home() {
               <Input
                 className="h-14 text-base"
                 placeholder="Unesite grad, npr. Sarajevo"
+                value={grad}
+                onChange={(e) => setGrad(e.target.value)}
               />
             </div>
 
             {/* Search Button */}
-            <Button className="h-14 px-8 text-base bg-blue-600 hover:bg-blue-700">
+            <Button type="submit" className="h-14 px-8 text-base bg-blue-600 hover:bg-blue-700">
               Traži majstora
             </Button>
 
           </div>
-        </div>
+        </form>
 
       </main>
     </div>

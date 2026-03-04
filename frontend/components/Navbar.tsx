@@ -20,7 +20,7 @@ export function Navbar() {
                 {/* Auth Right */}
                 <div className="flex items-center gap-4">
                     {isLoaded && !isSignedIn && (
-                        <SignInButton mode="modal">
+                        <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
                             <Button variant="default">Prijavi se</Button>
                         </SignInButton>
                     )}
