@@ -6,36 +6,49 @@ import httpx
 
 security = HTTPBearer()
 
-# Example: https://clerk.your-domain.com
-CLERK_FRONTEND_API_URL = os.getenv("CLERK_FRONTEND_API_URL", "https://api.clerk.dev/v1")
+# Your clerk publishable key (useful if needed for JWKS URL building in dynamic setups)
+CLERK_FRONTEND_API_URL = os.getenv("NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY")
 CLERK_SECRET_KEY = os.getenv("CLERK_SECRET_KEY")
-JWKS_URL = os.getenv("CLERK_JWKS_URL", "https://your-domain.clerk.accounts.dev/.well-known/jwks.json")
+
+# For Clerk, the JWKS URL is your frontend API URL + /.well-known/jwks.json generally, 
+# but for DEV instances, it's often https://api.clerk.dev/v1/jwks or built from the secret. 
+# The most reliable for modern Clerk is https://<YOUR_CLERK_DOMAIN>/.well-known/jwks.json
+JWKS_URL = os.getenv("CLERK_JWKS_URL", "https://api.clerk.com/v1/jwks")
 
 async def get_clerk_jwks():
     # In production, cache this!
+    headers = {}
+    if CLERK_SECRET_KEY:
+        headers["Authorization"] = f"Bearer {CLERK_SECRET_KEY}"
+        
     async with httpx.AsyncClient() as client:
-        response = await client.get(JWKS_URL)
+        response = await client.get(JWKS_URL, headers=headers)
         if response.status_code == 200:
             return response.json()
-        raise HTTPException(status_code=500, detail="Neuspješno dohvatanje JWKS od Clerka")
+        raise HTTPException(status_code=500, detail=f"Neuspješno dohvatanje JWKS od Clerka: {response.text}")
 
 async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):
     token = credentials.credentials
     jwks = await get_clerk_jwks()
 
     # Get the unverified header to extract kid
-    unverified_header = jwt.get_unverified_header(token)
+    try:
+        unverified_header = jwt.get_unverified_header(token)
+    except JWTError:
+        raise HTTPException(status_code=401, detail="Nevažeći format tokena.")
+        
     rsa_key = {}
-    for key in jwks["keys"]:
-        if key["kid"] == unverified_header["kid"]:
-            rsa_key = {
-                "kty": key["kty"],
-                "kid": key["kid"],
-                "use": key["use"],
-                "n": key["n"],
-                "e": key["e"]
-            }
-            break
+    if "keys" in jwks:
+        for key in jwks["keys"]:
+            if key.get("kid") == unverified_header.get("kid"):
+                rsa_key = {
+                    "kty": key["kty"],
+                    "kid": key["kid"],
+                    "use": key["use"],
+                    "n": key["n"],
+                    "e": key["e"]
+                }
+                break
 
     if rsa_key:
         try:

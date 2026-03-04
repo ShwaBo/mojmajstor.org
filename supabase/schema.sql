@@ -1,25 +1,25 @@
--- Omogućavanje UUID ekstenzije
+-- Enable the "uuid-ossp" extension for generating UUIDs
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- 1. Korisnici (Users)
-CREATE TABLE users (
+-- Table: users
+CREATE TABLE IF NOT EXISTS users (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    clerk_id VARCHAR UNIQUE, -- ID iz Clerk sistema za povezivanje
+    clerk_id VARCHAR UNIQUE,
     ime_prezime VARCHAR NOT NULL,
     email VARCHAR UNIQUE NOT NULL,
     telefon VARCHAR,
-    datum_registracije TIMESTAMP DEFAULT NOW()
+    datum_registracije TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 2. Kategorije (Categories)
-CREATE TABLE categories (
+-- Table: categories
+CREATE TABLE IF NOT EXISTS categories (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     naziv VARCHAR NOT NULL,
     ikona_url VARCHAR
 );
 
--- 3. Majstori (Profiles/Tradesmen)
-CREATE TABLE tradesmen (
+-- Table: tradesmen (Majstori)
+CREATE TABLE IF NOT EXISTS tradesmen (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     korisnik_id UUID REFERENCES users(id) ON DELETE CASCADE,
     naziv_firme_ili_obrta VARCHAR NOT NULL,
@@ -29,21 +29,28 @@ CREATE TABLE tradesmen (
     prosjecna_ocjena DECIMAL(3, 2) DEFAULT 0.00
 );
 
--- 4. Usluge_Cjenovnik (Services)
-CREATE TABLE services (
+-- Table: services (Usluge)
+CREATE TABLE IF NOT EXISTS services (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    majstor_id UUID REFERENCES tradesmen(id) ON DELETE CASCADE,
+    majstor_id UUID NOT NULL REFERENCES tradesmen(id) ON DELETE CASCADE,
     naziv_usluge VARCHAR NOT NULL,
     cijena DECIMAL(10, 2) NOT NULL,
     jedinica_mjere VARCHAR NOT NULL
 );
 
--- 5. Recenzije (Reviews)
-CREATE TABLE reviews (
+-- Table: reviews (Recenzije)
+CREATE TABLE IF NOT EXISTS reviews (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    majstor_id UUID REFERENCES tradesmen(id) ON DELETE CASCADE,
-    korisnik_id UUID REFERENCES users(id) ON DELETE CASCADE,
-    ocjena INTEGER CHECK (ocjena >= 1 AND ocjena <= 5),
+    majstor_id UUID NOT NULL REFERENCES tradesmen(id) ON DELETE CASCADE,
+    korisnik_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    ocjena INTEGER NOT NULL CHECK (ocjena >= 1 AND ocjena <= 5),
     komentar TEXT,
-    datum_objave TIMESTAMP DEFAULT NOW()
+    datum_objave TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Security: Enable Row Level Security (RLS) to block unauthorized direct Supabase API access
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tradesmen ENABLE ROW LEVEL SECURITY;
+ALTER TABLE categories ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reviews ENABLE ROW LEVEL SECURITY;

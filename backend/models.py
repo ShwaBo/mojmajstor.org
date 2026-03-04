@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, Integer, Decimal, Text, ForeignKey, DateTime
+from sqlalchemy import Column, String, Integer, DECIMAL, Text, ForeignKey, DateTime
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 import uuid
@@ -38,7 +38,7 @@ class Tradesman(Base):
     kategorija_id = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="SET NULL"), nullable=True)
     grad = Column(String, nullable=False)
     opis = Column(Text, nullable=True)
-    prosjecna_ocjena = Column(Decimal(3, 2), default=0.00)
+    prosjecna_ocjena = Column(DECIMAL(3, 2), default=0.00)
 
     # Relationships
     user = relationship("User", back_populates="tradesmen")
@@ -52,7 +52,7 @@ class Service(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     majstor_id = Column(UUID(as_uuid=True), ForeignKey("tradesmen.id", ondelete="CASCADE"), nullable=False)
     naziv_usluge = Column(String, nullable=False)
-    cijena = Column(Decimal(10, 2), nullable=False)
+    cijena = Column(DECIMAL(10, 2), nullable=False)
     jedinica_mjere = Column(String, nullable=False)
 
     # Relationships
