@@ -1,0 +1,39 @@
+
+> frontend@0.1.0 build
+> next build
+
+Γû▓ Next.js 16.1.6 (Turbopack)
+- Environments: .env.local
+
+  Creating an optimized production build ...
+
+> Build error occurred
+Error: Turbopack build failed with 2 errors:
+./app/page.tsx:1:1
+Export SignedIn doesn't exist in target module
+> 1 | import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 |
+  3 | export default function Home() {
+  4 |   return (
+
+The export SignedIn was not found in module [project]/node_modules/@clerk/nextjs/dist/esm/index.js [app-rsc] (ecmascript).
+Did you mean to import SignIn?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+./app/page.tsx:1:1
+Export SignedOut doesn't exist in target module
+> 1 | import { SignInButton, SignedIn, SignedOut, UserButton } from '@clerk/nextjs'
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  2 |
+  3 | export default function Home() {
+  4 |   return (
+
+The export SignedOut was not found in module [project]/node_modules/@clerk/nextjs/dist/esm/index.js [app-rsc] (ecmascript).
+Did you mean to import SignOutButton?
+All exports of the module are statically known (It doesn't have dynamic exports). So it's known statically that the requested export doesn't exist.
+
+
+    at <unknown> (./app/page.tsx:1:1)
+    at <unknown> (./app/page.tsx:1:1)
