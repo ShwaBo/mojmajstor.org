@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { SignInButton, SignOutButton, UserButton, useAuth } from "@clerk/nextjs";
+import { SignInButton, SignOutButton, UserButton, useAuth, ClerkLoaded } from "@clerk/nextjs";
 import { Button } from "@/components/ui/button";
 
 export function Navbar() {
@@ -19,20 +19,22 @@ export function Navbar() {
 
                 {/* Auth Right */}
                 <div className="flex items-center gap-4">
-                    {isLoaded && !isSignedIn && (
-                        <SignInButton mode="modal" fallbackRedirectUrl="/dashboard">
-                            <Button variant="default">Prijavi se</Button>
-                        </SignInButton>
-                    )}
+                    <ClerkLoaded>
+                        {!isSignedIn && (
+                            <SignInButton mode="modal" forceRedirectUrl="/dashboard">
+                                <Button variant="default">Prijavi se</Button>
+                            </SignInButton>
+                        )}
 
-                    {isLoaded && isSignedIn && (
-                        <>
-                            <Link href="/dashboard">
-                                <Button variant="ghost">Dashboard</Button>
-                            </Link>
-                            <UserButton />
-                        </>
-                    )}
+                        {isSignedIn && (
+                            <>
+                                <Link href="/dashboard">
+                                    <Button variant="ghost">Dashboard</Button>
+                                </Link>
+                                <UserButton />
+                            </>
+                        )}
+                    </ClerkLoaded>
                 </div>
             </div>
         </nav>

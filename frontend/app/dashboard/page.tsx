@@ -2,6 +2,17 @@
 
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useUser } from "@clerk/nextjs";
 
 export default function DashboardPage() {
@@ -38,9 +49,36 @@ export default function DashboardPage() {
                             <div className="bg-gray-50 p-4 rounded-md border text-sm text-gray-500 flex items-center justify-center h-24">
                                 Trenutni status profila (Uskoro)
                             </div>
-                            <Button className="w-full" onClick={() => console.log("Otvaram modal za uređivanje profila...")}>
-                                Uredi profil
-                            </Button>
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <Button className="w-full">Uredi profil</Button>
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader>
+                                        <DialogTitle>Uredi profil</DialogTitle>
+                                        <DialogDescription>
+                                            Ovdje možete ažurirati svoje javne podatke.
+                                        </DialogDescription>
+                                    </DialogHeader>
+                                    <div className="grid gap-4 py-4">
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="name" className="text-right">
+                                                Ime / Firma
+                                            </Label>
+                                            <Input id="name" placeholder="npr. Adnan M." className="col-span-3" />
+                                        </div>
+                                        <div className="grid grid-cols-4 items-center gap-4">
+                                            <Label htmlFor="city" className="text-right">
+                                                Grad
+                                            </Label>
+                                            <Input id="city" placeholder="npr. Sarajevo" className="col-span-3" />
+                                        </div>
+                                    </div>
+                                    <DialogFooter>
+                                        <Button type="submit">Spremi promjene</Button>
+                                    </DialogFooter>
+                                </DialogContent>
+                            </Dialog>
                         </div>
                     </CardContent>
                 </Card>

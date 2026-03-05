@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Wrench, Zap, Grip, Sparkles, PaintBucket, CarFront, CheckCircle, Pencil, Send, UserCheck } from "lucide-react";
+import SearchBar from "@/components/SearchBar";
 
 export default function Home() {
   const router = useRouter();
@@ -30,30 +31,40 @@ export default function Home() {
         {/* Background Pattern */}
         <div className="absolute inset-0 bg-blue-50/50 -z-10" />
         <div className="container mx-auto max-w-5xl text-center space-y-8">
-          <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 leading-tight">
-            Pronađi majstora ili <br className="hidden md:block" />
-            <span className="text-blue-600">objavi posao besplatno</span>
-          </h1>
-          <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
-            Najveća mreža pouzdanih stručnjaka u Bosni i Hercegovini. Riješite svaki problem brzo i povoljno.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <Button
-              size="lg"
-              className="h-16 px-10 text-lg bg-blue-600 hover:bg-blue-700 shadow-md"
-              onClick={() => router.push('/pretraga')}
-            >
-              Pronađi majstora
-            </Button>
-            <Button
-              size="lg"
-              variant="outline"
-              className="h-16 px-10 text-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white"
-              onClick={() => router.push('/objavi-posao')}
-            >
-              Objavi posao (Besplatno)
-            </Button>
+
+          {/* Hero Text */}
+          <div className="space-y-4">
+            <h1 className="text-5xl md:text-7xl font-extrabold tracking-tight text-gray-900 leading-tight">
+              Pronađi majstora ili <br className="hidden md:block" />
+              <span className="text-blue-600">objavi posao besplatno</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-gray-600 max-w-3xl mx-auto">
+              Najveća mreža pouzdanih stručnjaka u Bosni i Hercegovini. Riješite svaki problem brzo i povoljno.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8 relative z-20">
+              <Button
+                size="lg"
+                className="h-16 px-10 text-lg bg-blue-600 hover:bg-blue-700 shadow-md"
+                onClick={() => router.push('/pretraga')}
+              >
+                Pronađi majstora
+              </Button>
+              <Button
+                size="lg"
+                variant="outline"
+                className="h-16 px-10 text-lg border-2 border-blue-600 text-blue-600 hover:bg-blue-50 bg-white"
+                onClick={() => router.push('/objavi-posao')}
+              >
+                Objavi posao (Besplatno)
+              </Button>
+            </div>
           </div>
+
+          {/* Search Component */}
+          <div className="flex justify-center w-full">
+            <SearchBar />
+          </div>
+
         </div>
       </section>
 
