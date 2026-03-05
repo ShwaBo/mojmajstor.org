@@ -32,8 +32,14 @@ function SearchResultsContent() {
         const loadTradesmen = async () => {
             try {
                 setLoading(true);
-                // We fetch all from the cloud backend. The fallback in api.ts ensures it points to Railway.
-                const data = await fetchData("/tradesmen/");
+                // In a production setup, we'd map "kategorija" slug to a UUID here
+                // For now, if the user picks a city, we pass it. If there were a categorija mapping, we'd add it too.
+                const params = new URLSearchParams();
+                if (initGrad) params.append("grad", initGrad);
+                // Categorija mapping would go here if supported by the FastAPI directly via slug 
+
+                const data = await fetchData(`/tradesmen/?${params.toString()}`);
+
                 setTradesmen(data);
                 setError(null);
             } catch (err) {
@@ -47,10 +53,10 @@ function SearchResultsContent() {
         loadTradesmen();
     }, []);
 
+    // We apply local filtering on top of DB filtering for categories (as backend only accepts UUIDs for categories right now)
     const filteredResults = tradesmen.filter(r => {
-        const matchCategory = !kategorija || (r.category?.naziv && r.category.naziv.toLowerCase().includes(kategorija.toLowerCase()));
-        const matchCity = !grad || r.grad.toLowerCase().includes(grad.toLowerCase());
-        return matchCategory && matchCity;
+        const matchCategory = !kategorija || (r.category_id?.naziv && r.category_id.naziv.toLowerCase().includes(kategorija.toLowerCase()));
+        return matchCategory;
     });
 
     return (
@@ -161,8 +167,8 @@ function SearchResultsContent() {
                                     <div className="flex flex-col sm:flex-row p-6 gap-6 items-center sm:items-start">
                                         {/* Avatar Placeholder */}
                                         <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center flex-shrink-0 border border-gray-200 shadow-inner overflow-hidden">
-                                            {result.category?.ikona_url ? (
-                                                <img src={result.category.ikona_url} alt="Ikona" className="w-full h-full object-cover" />
+                                            {result.category_id?.ikona_url ? (
+                                                <img src={result.category_id.ikona_url} alt="Ikona" className="w-full h-full object-cover" />
                                             ) : (
                                                 <span className="text-2xl font-bold text-gray-400">
                                                     {result.naziv_firme_ili_obrta.charAt(0)}
@@ -177,7 +183,7 @@ function SearchResultsContent() {
                                                     <h2 className="text-xl font-bold text-gray-900">{result.naziv_firme_ili_obrta}</h2>
                                                     <div className="flex items-center justify-center sm:justify-start text-blue-600 font-medium mt-1">
                                                         <Wrench className="w-4 h-4 mr-1" />
-                                                        {result.category?.naziv || "Ostalo"}
+                                                        {result.category_id?.naziv || "Ostalo"}
                                                     </div>
                                                 </div>
                                                 <div className="mt-2 sm:mt-0 flex items-center justify-center bg-yellow-50 px-3 py-1 rounded-full text-yellow-700 border border-yellow-200">

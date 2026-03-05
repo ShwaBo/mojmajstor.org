@@ -7,7 +7,7 @@ from uuid import UUID
 import models
 import schemas
 import crud
-from database import engine, get_db
+from database import get_db
 
 # Create tables if they don't exist (useful for MVP, though Supabase is already initialized)
 # models.Base.metadata.create_all(bind=engine)

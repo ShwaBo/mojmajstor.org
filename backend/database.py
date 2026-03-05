@@ -1,26 +1,20 @@
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from supabase import create_client, Client
 from dotenv import load_dotenv
+from sqlalchemy.orm import declarative_base
 
 load_dotenv()
 
-# Example format for Supabase: postgresql://postgres.[project_ref]:[password]@aws-0-[region].pooler.supabase.com:6543/postgres
-DATABASE_URL = os.getenv("DATABASE_URL")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
-if not DATABASE_URL:
-    raise ValueError("DATABASE_URL is not set in environment variables.")
+if not SUPABASE_URL or not SUPABASE_KEY:
+    raise ValueError("Obavezni Supabase parametri nedostaju (SUPABASE_URL, SUPABASE_KEY) u .env datoteci")
 
-# Supabase typically needs SSL enabled, though local or pooled connections usually handle it
-engine = create_engine(DATABASE_URL, pool_pre_ping=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# Mocked out standard DB injection to prevent routing failures gracefully
+def get_db():
+    yield supabase
 
 Base = declarative_base()
-
-# Dependency
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()

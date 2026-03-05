@@ -1,42 +1,37 @@
-from sqlalchemy.orm import Session
-import models
 import schemas
 from uuid import UUID
+from supabase import Client
 
-def get_tradesmen(db: Session, grad: str = None, kategorija_id: UUID = None, skip: int = 0, limit: int = 100):
-    query = db.query(models.Tradesman)
+def get_tradesmen(db: Client, grad: str = None, kategorija_id: UUID = None, skip: int = 0, limit: int = 100):
+    query = db.table('tradesmen').select('*, category_id:categories(*)')
     if grad:
-        query = query.filter(models.Tradesman.grad.ilike(f"%{grad}%"))
+        query = query.ilike('grad', f"%{grad}%")
     if kategorija_id:
-        query = query.filter(models.Tradesman.kategorija_id == kategorija_id)
-    return query.offset(skip).limit(limit).all()
+        query = query.eq('kategorija_id', str(kategorija_id))
+        
+    response = query.range(skip, skip + limit - 1).execute()
+    return response.data
 
-def get_tradesman(db: Session, tradesman_id: UUID):
-    return db.query(models.Tradesman).filter(models.Tradesman.id == tradesman_id).first()
+def get_tradesman(db: Client, tradesman_id: UUID):
+    response = db.table('tradesmen').select('*, category_id:categories(*)').eq('id', str(tradesman_id)).single().execute()
+    return response.data if hasattr(response, 'data') else None
 
-def create_tradesman(db: Session, tradesman: schemas.TradesmanCreate):
-    db_tradesman = models.Tradesman(**tradesman.model_dump())
-    db.add(db_tradesman)
-    db.commit()
-    db.refresh(db_tradesman)
-    return db_tradesman
+def create_tradesman(db: Client, tradesman: schemas.TradesmanCreate):
+    response = db.table('tradesmen').insert(tradesman.model_dump()).execute()
+    return response.data[0] if response.data else None
 
-def get_categories(db: Session):
-    return db.query(models.Category).all()
+def get_categories(db: Client):
+    response = db.table('categories').select('*').execute()
+    return response.data
 
-def create_category(db: Session, category: schemas.CategoryBase):
-    db_category = models.Category(**category.model_dump())
-    db.add(db_category)
-    db.commit()
-    db.refresh(db_category)
-    return db_category
+def create_category(db: Client, category: schemas.CategoryBase):
+    response = db.table('categories').insert(category.model_dump()).execute()
+    return response.data[0] if response.data else None
 
-def create_review(db: Session, review: schemas.ReviewCreate):
-    db_review = models.Review(**review.model_dump())
-    db.add(db_review)
-    db.commit()
-    db.refresh(db_review)
-    return db_review
+def create_review(db: Client, review: schemas.ReviewCreate):
+    response = db.table('reviews').insert(review.model_dump()).execute()
+    return response.data[0] if response.data else None
 
-def get_services_for_tradesman(db: Session, tradesman_id: UUID):
-    return db.query(models.Service).filter(models.Service.majstor_id == tradesman_id).all()
+def get_services_for_tradesman(db: Client, tradesman_id: UUID):
+    response = db.table('services').select('*').eq('majstor_id', str(tradesman_id)).execute()
+    return response.data
