@@ -25,6 +25,7 @@ function SearchResultsContent() {
     const [tip, setTip] = useState("svi");
 
     const [tradesmen, setTradesmen] = useState<any[]>([]);
+    const [categoriesList, setCategoriesList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
@@ -38,9 +39,13 @@ function SearchResultsContent() {
                 if (initGrad) params.append("grad", initGrad);
                 // Categorija mapping would go here if supported by the FastAPI directly via slug 
 
-                const data = await fetchData(`/tradesmen/?${params.toString()}`);
+                const [data, cats] = await Promise.all([
+                    fetchData(`/tradesmen/?${params.toString()}`),
+                    fetchData('/categories/')
+                ]);
 
                 setTradesmen(data);
+                setCategoriesList(cats);
                 setError(null);
             } catch (err) {
                 console.error("Error fetching tradesmen", err);
@@ -55,8 +60,12 @@ function SearchResultsContent() {
 
     // We apply local filtering on top of DB filtering for categories (as backend only accepts UUIDs for categories right now)
     const filteredResults = tradesmen.filter(r => {
-        const matchCategory = !kategorija || (r.category_id?.naziv && r.category_id.naziv.toLowerCase().includes(kategorija.toLowerCase()));
-        return matchCategory;
+        // Our categories now use UUIDs or string match depending on legacy logic. 
+        // We match by name if the user selected a category ID since the ID selects standard dropdown values.
+        if (kategorija && kategorija !== "sve") {
+            return r.kategorija_id === kategorija || r.category_id?.id === kategorija;
+        }
+        return true;
     });
 
     return (
@@ -73,12 +82,10 @@ function SearchResultsContent() {
                                     <SelectValue placeholder="Sve kategorije" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="vodoinstalater">Vodoinstalater</SelectItem>
-                                    <SelectItem value="elektricar">Električar</SelectItem>
-                                    <SelectItem value="keramicar">Keramičar</SelectItem>
-                                    <SelectItem value="ciscenje">Čišćenje</SelectItem>
-                                    <SelectItem value="fasade">Fasade</SelectItem>
-                                    <SelectItem value="automehanicar">Automehaničar</SelectItem>
+                                    <SelectItem value="sve">Sve kategorije</SelectItem>
+                                    {categoriesList.map(cat => (
+                                        <SelectItem key={cat.id} value={cat.id}>{cat.naziv}</SelectItem>
+                                    ))}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -108,7 +115,7 @@ function SearchResultsContent() {
 
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 mt-4" onClick={() => {
                             const params = new URLSearchParams();
-                            if (kategorija) params.append("kategorija", kategorija);
+                            if (kategorija && kategorija !== "sve") params.append("kategorija", kategorija);
                             if (grad) params.append("grad", grad);
 
                             // To correctly update the URL without refreshing, we'd normally use router.push
@@ -132,7 +139,7 @@ function SearchResultsContent() {
                         ) : (
                             <>
                                 Pronađeno <span className="font-bold text-gray-900">{filteredResults.length}</span> rezultata
-                                {kategorija && <span> za <span className="font-bold capitalize">{kategorija}</span></span>}
+                                {kategorija && kategorija !== "sve" && <span> za <span className="font-bold capitalize">{categoriesList.find(c => c.id === kategorija)?.naziv}</span></span>}
                                 {grad && <span> u <span className="font-bold capitalize">{grad}</span></span>}
                             </>
                         )}

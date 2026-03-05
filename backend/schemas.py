@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from typing import Optional, List
 from uuid import UUID
 from datetime import datetime
@@ -57,7 +57,7 @@ class TradesmanResponse(TradesmanBase):
     id: UUID
     korisnik_id: Optional[UUID]
     prosjecna_ocjena: Decimal
-    category: Optional[CategoryResponse] = None
+    category: Optional[CategoryResponse] = Field(None, alias="category_id")
     
     model_config = ConfigDict(from_attributes=True)
 
