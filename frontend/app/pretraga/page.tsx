@@ -15,10 +15,42 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Star, Wrench } from "lucide-react";
 
+const GRADOVI = [
+    // FEDERACIJA BOSNE I HERCEGOVINE (FBiH)
+    "Sarajevo", "Ilidža", "Vogošća", "Hadžići", "Ilijaš", "Trnovo FBiH",
+    "Tuzla", "Živinice", "Gračanica", "Lukavac", "Srebrenik", "Gradačac",
+    "Kalesija", "Banovići", "Kladanj", "Sapna", "Teočak", "Doboj Istok",
+    "Zenica", "Kakanj", "Visoko", "Tešanj", "Zavidovići", "Žepče",
+    "Maglaj", "Breza", "Olovo", "Vareš", "Usora", "Doboj Jug",
+    "Travnik", "Bugojno", "Jajce", "Vitez", "Novi Travnik", "Kiseljak",
+    "Donji Vakuf", "Gornji Vakuf-Uskoplje", "Busovača", "Fojnica",
+    "Bihać", "Cazin", "Velika Kladuša", "Sanski Most", "Bosanska Krupa",
+    "Ključ", "Bužim", "Bosanski Petrovac",
+    "Mostar", "Konjic", "Čapljina", "Jablanica", "Stolac", "Prozor-Rama",
+    "Čitluk", "Neum",
+    "Široki Brijeg", "Ljubuški", "Posušje", "Grude",
+    "Livno", "Tomislavgrad", "Kupres", "Glamoč", "Drvar",
+    "Orašje", "Odžak", "Domaljevac-Šamac",
+    "Goražde", "Prača", "Ustikolina",
+
+    // REPUBLIKA SRPSKA (RS)
+    "Banja Luka", "Prijedor", "Gradiška", "Novi Grad", "Kozarska Dubica",
+    "Prnjavor", "Kotor Varoš", "Laktaši", "Srbac", "Čelinac", "Kostajnica",
+    "Doboj", "Derventa", "Teslić", "Modriča", "Brod", "Šamac", "Stanari",
+    "Bijeljina", "Zvornik", "Ugljevik", "Lopare", "Bratunac", "Srebrenica",
+    "Vlasenica", "Milići",
+    "Istočno Sarajevo", "Pale", "Sokolac", "Rogatica", "Višegrad", "Foča",
+    "Rudo", "Han Pijesak",
+    "Trebinje", "Bileća", "Gacko", "Nevesinje", "Ljubinje",
+
+    // BRČKO DISTRIKT (BD)
+    "Brčko"
+].sort((a, b) => a.localeCompare(b, 'hr'));
+
 function SearchResultsContent() {
     const searchParams = useSearchParams();
-    const initKategorija = searchParams.get("kategorija") || "";
-    const initGrad = searchParams.get("grad") || "";
+    const initKategorija = searchParams.get("kategorija") || "sve";
+    const initGrad = searchParams.get("grad") || "svi";
 
     const [kategorija, setKategorija] = useState(initKategorija);
     const [grad, setGrad] = useState(initGrad);
@@ -36,7 +68,7 @@ function SearchResultsContent() {
                 // In a production setup, we'd map "kategorija" slug to a UUID here
                 // For now, if the user picks a city, we pass it. If there were a categorija mapping, we'd add it too.
                 const params = new URLSearchParams();
-                if (initGrad) params.append("grad", initGrad);
+                if (initGrad && initGrad !== "svi") params.append("grad", initGrad);
                 // Categorija mapping would go here if supported by the FastAPI directly via slug 
 
                 const [data, cats] = await Promise.all([
@@ -92,11 +124,17 @@ function SearchResultsContent() {
 
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-gray-700">Grad</label>
-                            <Input
-                                value={grad}
-                                onChange={(e) => setGrad(e.target.value)}
-                                placeholder="Unesite grad"
-                            />
+                            <Select value={grad} onValueChange={setGrad}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Svi gradovi" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="svi">Svi gradovi</SelectItem>
+                                    {GRADOVI.map(g => (
+                                        <SelectItem key={g} value={g}>{g}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
                         </div>
 
                         <div className="space-y-2">
@@ -116,7 +154,7 @@ function SearchResultsContent() {
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 mt-4" onClick={() => {
                             const params = new URLSearchParams();
                             if (kategorija && kategorija !== "sve") params.append("kategorija", kategorija);
-                            if (grad) params.append("grad", grad);
+                            if (grad && grad !== "svi") params.append("grad", grad);
 
                             // To correctly update the URL without refreshing, we'd normally use router.push
                             // We need to import useRouter from next/navigation at the top of the component.
@@ -140,7 +178,7 @@ function SearchResultsContent() {
                             <>
                                 Pronađeno <span className="font-bold text-gray-900">{filteredResults.length}</span> rezultata
                                 {kategorija && kategorija !== "sve" && <span> za <span className="font-bold capitalize">{categoriesList.find(c => c.id === kategorija)?.naziv}</span></span>}
-                                {grad && <span> u <span className="font-bold capitalize">{grad}</span></span>}
+                                {grad && grad !== "svi" && <span> u <span className="font-bold capitalize">{grad}</span></span>}
                             </>
                         )}
                     </p>
@@ -164,7 +202,7 @@ function SearchResultsContent() {
                             <CardContent className="space-y-3">
                                 <h3 className="text-xl font-medium text-gray-900">Nema rezultata</h3>
                                 <p className="text-gray-500">Nismo pronašli majstore koji odgovaraju vašim kriterijima.</p>
-                                <Button variant="outline" onClick={() => { setKategorija(""); setGrad(""); }}>Očisti filtere</Button>
+                                <Button variant="outline" onClick={() => { setKategorija("sve"); setGrad("svi"); }}>Očisti filtere</Button>
                             </CardContent>
                         </Card>
                     ) : (
