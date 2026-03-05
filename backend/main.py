@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Query
+from fastapi import FastAPI, Depends, HTTPException, BackgroundTasks, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
@@ -8,6 +8,7 @@ import models
 import schemas
 import crud
 from database import get_db
+from scraper import run_scraper
 
 # Create tables if they don't exist (useful for MVP, though Supabase is already initialized)
 # models.Base.metadata.create_all(bind=engine)
@@ -65,3 +66,10 @@ from auth import require_auth
 def create_review(review: schemas.ReviewCreate, clerk_id: str = Depends(require_auth), db: Session = Depends(get_db)):
     # Verify the user making the request actually exists via clerk_id or just insert
     return crud.create_review(db=db, review=review)
+
+@app.post("/admin/scrape")
+def trigger_scraper(background_tasks: BackgroundTasks, test_mode: bool = True):
+    from scraper import run_scraper
+    # This endpoint simply triggers the scraping job in the background and returns immediately
+    background_tasks.add_task(run_scraper, test_mode)
+    return {"message": "Scraping task started in the background", "test_mode": test_mode}
