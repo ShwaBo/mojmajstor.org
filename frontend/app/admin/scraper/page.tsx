@@ -15,8 +15,10 @@ export default function ScraperDashboard() {
         setStatus({ type: null, message: null });
 
         try {
-            // Point to backend API, using NEXT_PUBLIC_API_URL or localhost directly since it's admin
-            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+            // Point to backend API, using NEXT_PUBLIC_API_URL or the production Railway instance directly since it's admin
+            const apiUrl = process.env.NEXT_PUBLIC_API_URL || "https://mojmajstor-backend-production.up.railway.app";
+
+            // Note: Since this calls a production backend from the browser client, Railway must not block CORS from Vercel
             const response = await fetch(`${apiUrl}/admin/scrape?test_mode=${testMode}`, {
                 method: "POST",
                 headers: {
