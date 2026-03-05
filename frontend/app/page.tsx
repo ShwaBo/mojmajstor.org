@@ -8,12 +8,12 @@ export default function Home() {
   const router = useRouter();
 
   const categories = [
-    { name: "Vodoinstalater", icon: Wrench, color: "text-blue-500", bg: "bg-blue-50" },
-    { name: "Električar", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-50" },
-    { name: "Keramičar", icon: Grip, color: "text-orange-500", bg: "bg-orange-50" },
-    { name: "Čišćenje", icon: Sparkles, color: "text-green-500", bg: "bg-green-50" },
-    { name: "Fasade", icon: PaintBucket, color: "text-red-500", bg: "bg-red-50" },
-    { name: "Automehaničar", icon: CarFront, color: "text-gray-600", bg: "bg-gray-100" },
+    { name: "Vodoinstalater", slug: "vodoinstalater", icon: Wrench, color: "text-blue-500", bg: "bg-blue-50" },
+    { name: "Električar", slug: "elektricar", icon: Zap, color: "text-yellow-500", bg: "bg-yellow-50" },
+    { name: "Keramičar", slug: "keramicar", icon: Grip, color: "text-orange-500", bg: "bg-orange-50" },
+    { name: "Čišćenje", slug: "ciscenje", icon: Sparkles, color: "text-green-500", bg: "bg-green-50" },
+    { name: "Fasade", slug: "fasade", icon: PaintBucket, color: "text-red-500", bg: "bg-red-50" },
+    { name: "Automehaničar", slug: "automehanicar", icon: CarFront, color: "text-gray-600", bg: "bg-gray-100" },
   ];
 
   const steps = [
@@ -67,7 +67,7 @@ export default function Home() {
               return (
                 <div
                   key={idx}
-                  onClick={() => router.push(`/pretraga?kategorija=${cat.name.toLowerCase()}`)}
+                  onClick={() => router.push(`/pretraga?kategorija=${cat.slug}`)}
                   className="group cursor-pointer flex flex-col items-center p-6 border rounded-2xl hover:shadow-lg transition-all hover:border-blue-200 bg-white"
                 >
                   <div className={`w-16 h-16 rounded-full flex items-center justify-center mb-4 ${cat.bg} group-hover:scale-110 transition-transform`}>

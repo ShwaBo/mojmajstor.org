@@ -76,7 +76,17 @@ function SearchResultsContent() {
                             </Select>
                         </div>
 
-                        <Button className="w-full bg-blue-600 hover:bg-blue-700 mt-4">
+                        <Button className="w-full bg-blue-600 hover:bg-blue-700 mt-4" onClick={() => {
+                            const params = new URLSearchParams();
+                            if (kategorija) params.append("kategorija", kategorija);
+                            if (grad) params.append("grad", grad);
+
+                            // To correctly update the URL without refreshing, we'd normally use router.push
+                            // We need to import useRouter from next/navigation at the top of the component.
+                            // I will do an inline update of window history for simplicity, 
+                            // but let's actually just let the state drive the UI for now, and update the URL silently.
+                            window.history.replaceState(null, '', `?${params.toString()}`);
+                        }}>
                             Primijeni filtere
                         </Button>
                     </div>
@@ -87,14 +97,22 @@ function SearchResultsContent() {
             <main className="w-full md:w-3/4 space-y-6">
                 <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border">
                     <p className="text-gray-600">
-                        Pronađeno <span className="font-bold text-gray-900">{dummyResults.length}</span> rezultata
+                        Pronađeno <span className="font-bold text-gray-900">{
+                            dummyResults.filter(r =>
+                                (!kategorija || r.category.toLowerCase().includes(kategorija.toLowerCase())) &&
+                                (!grad || r.city.toLowerCase().includes(grad.toLowerCase()))
+                            ).length
+                        }</span> rezultata
                         {kategorija && <span> za <span className="font-bold capitalize">{kategorija}</span></span>}
                         {grad && <span> u <span className="font-bold capitalize">{grad}</span></span>}
                     </p>
                 </div>
 
                 <div className="space-y-4">
-                    {dummyResults.map((result, idx) => (
+                    {dummyResults.filter(r =>
+                        (!kategorija || r.category.toLowerCase().includes(kategorija.toLowerCase())) &&
+                        (!grad || r.city.toLowerCase().includes(grad.toLowerCase()))
+                    ).map((result, idx) => (
                         <Card key={idx} className="overflow-hidden hover:shadow-md transition-shadow">
                             <CardContent className="p-0">
                                 <div className="flex flex-col sm:flex-row p-6 gap-6 items-center sm:items-start">
