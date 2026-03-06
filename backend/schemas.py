@@ -49,6 +49,13 @@ class TradesmanBase(BaseModel):
     grad: str
     opis: Optional[str] = None
     kategorija_id: Optional[UUID] = None
+    adresa: Optional[str] = None
+    telefon: Optional[str] = None
+    website: Optional[str] = None
+    google_maps_url: Optional[str] = None
+    verified: Optional[bool] = False
+    lat: Optional[float] = None
+    lng: Optional[float] = None
 
 class TradesmanCreate(TradesmanBase):
     korisnik_id: Optional[UUID] = None

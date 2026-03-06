@@ -43,11 +43,12 @@ def create_category(category: schemas.CategoryBase, db: Session = Depends(get_db
 def read_tradesmen(
     grad: str = None, 
     kategorija_id: UUID = None, 
+    verified: bool = None,
     skip: int = 0, 
     limit: int = 100, 
     db: Session = Depends(get_db)
 ):
-    return crud.get_tradesmen(db, grad=grad, kategorija_id=kategorija_id, skip=skip, limit=limit)
+    return crud.get_tradesmen(db, grad=grad, kategorija_id=kategorija_id, verified=verified, skip=skip, limit=limit)
 
 @app.post("/tradesmen/", response_model=schemas.TradesmanResponse)
 def create_tradesman(tradesman: schemas.TradesmanCreate, db: Session = Depends(get_db)):

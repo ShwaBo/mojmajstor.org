@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Wrench, Loader2 } from "lucide-react";
+import { MapPin, Star, Wrench, Loader2, Phone, Globe, CheckCircle } from "lucide-react";
 
 const GRADOVI = [
     // FEDERACIJA BOSNE I HERCEGOVINE (FBiH)
@@ -51,10 +51,11 @@ function SearchResultsContent() {
     const searchParams = useSearchParams();
     const initKategorija = searchParams.get("kategorija") || "sve";
     const initGrad = searchParams.get("grad") || "svi";
+    const initTip = searchParams.get("tip") || "svi";
 
     const [kategorija, setKategorija] = useState(initKategorija);
     const [grad, setGrad] = useState(initGrad);
-    const [tip, setTip] = useState("svi");
+    const [tip, setTip] = useState(initTip);
 
     const [tradesmen, setTradesmen] = useState<any[]>([]);
     const [categoriesList, setCategoriesList] = useState<any[]>([]);
@@ -73,6 +74,7 @@ function SearchResultsContent() {
             const params = new URLSearchParams();
             if (grad && grad !== "svi") params.append("grad", grad);
             if (kategorija && kategorija !== "sve") params.append("kategorija_id", kategorija);
+            if (tip === "verifikovani") params.append("verified", "true");
             params.append("skip", currentSkip.toString());
             params.append("limit", LIMIT.toString());
 
@@ -110,6 +112,7 @@ function SearchResultsContent() {
                 const params = new URLSearchParams();
                 if (initGrad && initGrad !== "svi") params.append("grad", initGrad);
                 if (initKategorija && initKategorija !== "sve") params.append("kategorija_id", initKategorija);
+                if (initTip === "verifikovani") params.append("verified", "true");
                 params.append("skip", "0");
                 params.append("limit", LIMIT.toString());
 
@@ -173,15 +176,14 @@ function SearchResultsContent() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium text-gray-700">Tip izvođača</label>
+                            <label className="text-sm font-medium text-gray-700">Status profila</label>
                             <Select value={tip} onValueChange={setTip}>
                                 <SelectTrigger>
-                                    <SelectValue placeholder="Svi izvođači" />
+                                    <SelectValue placeholder="Svi statusi" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="svi">Svi izvođači</SelectItem>
-                                    <SelectItem value="pojedinac">Samo pojedinci</SelectItem>
-                                    <SelectItem value="firma">Samo firme</SelectItem>
+                                    <SelectItem value="svi">Svi majstori</SelectItem>
+                                    <SelectItem value="verifikovani">Samo verifikovani</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -190,6 +192,7 @@ function SearchResultsContent() {
                             const params = new URLSearchParams();
                             if (kategorija && kategorija !== "sve") params.append("kategorija", kategorija);
                             if (grad && grad !== "svi") params.append("grad", grad);
+                            if (tip && tip !== "svi") params.append("tip", tip);
 
                             // To correctly update the URL without refreshing, we'd normally use router.push
                             // We need to import useRouter from next/navigation at the top of the component.
@@ -243,6 +246,7 @@ function SearchResultsContent() {
                                 <Button variant="outline" onClick={() => {
                                     setKategorija("sve");
                                     setGrad("svi");
+                                    setTip("svi");
                                     setSkip(0);
 
                                     const params = new URLSearchParams();
@@ -279,7 +283,14 @@ function SearchResultsContent() {
                                         <div className="flex-1 text-center sm:text-left space-y-2">
                                             <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start">
                                                 <div>
-                                                    <h2 className="text-xl font-bold text-gray-900">{result.naziv_firme_ili_obrta}</h2>
+                                                    <h2 className="text-xl font-bold text-gray-900 flex items-center justify-center sm:justify-start gap-2">
+                                                        {result.naziv_firme_ili_obrta}
+                                                        {result.verified && (
+                                                            <span title="Verifikovan profil" className="flex items-center">
+                                                                <CheckCircle className="w-5 h-5 text-blue-500 fill-blue-50" />
+                                                            </span>
+                                                        )}
+                                                    </h2>
                                                     <div className="flex items-center justify-center sm:justify-start text-blue-600 font-medium mt-1">
                                                         <Wrench className="w-4 h-4 mr-1" />
                                                         {result.category_id?.naziv || "Ostalo"}
@@ -291,9 +302,27 @@ function SearchResultsContent() {
                                                 </div>
                                             </div>
 
-                                            <div className="flex items-center justify-center sm:justify-start text-gray-500 text-sm">
-                                                <MapPin className="w-4 h-4 mr-1" />
-                                                {result.grad}
+                                            <div className="flex flex-wrap items-center justify-center sm:justify-start text-gray-500 text-sm gap-4 mt-2">
+                                                {result.grad && (
+                                                    <div className="flex items-center">
+                                                        <MapPin className="w-4 h-4 mr-1 text-gray-400" />
+                                                        {result.adresa ? `${result.adresa}, ${result.grad}` : result.grad}
+                                                    </div>
+                                                )}
+
+                                                {result.telefon && (
+                                                    <div className="flex items-center">
+                                                        <Phone className="w-4 h-4 mr-1 text-gray-400" />
+                                                        <a href={`tel:${result.telefon}`} className="hover:text-blue-600 hover:underline">{result.telefon}</a>
+                                                    </div>
+                                                )}
+
+                                                {result.website && (
+                                                    <div className="flex items-center">
+                                                        <Globe className="w-4 h-4 mr-1 text-gray-400" />
+                                                        <a href={result.website} target="_blank" rel="noopener noreferrer" className="hover:text-blue-600 hover:underline">Stranica</a>
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {result.opis && (
@@ -304,8 +333,14 @@ function SearchResultsContent() {
                                         </div>
 
                                         {/* Action */}
-                                        <div className="sm:self-center w-full sm:w-auto mt-4 sm:mt-0">
-                                            <Button className="w-full sm:w-auto">Kontaktiraj</Button>
+                                        <div className="sm:self-center w-full sm:w-auto mt-4 sm:mt-0 flex flex-col gap-2">
+                                            {result.google_maps_url ? (
+                                                <Button className="w-full sm:w-auto bg-[#e5f0ea] text-[#188038] hover:bg-[#d4e4db] font-semibold border border-[#d4e4db]" onClick={() => window.open(result.google_maps_url, "_blank")}>
+                                                    Prikaži na mapi
+                                                </Button>
+                                            ) : (
+                                                <Button className="w-full sm:w-auto">Kontaktiraj</Button>
+                                            )}
                                         </div>
                                     </div>
                                 </CardContent>

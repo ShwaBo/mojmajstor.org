@@ -2,14 +2,16 @@ import schemas
 from uuid import UUID
 from supabase import Client
 
-def get_tradesmen(db: Client, grad: str = None, kategorija_id: UUID = None, skip: int = 0, limit: int = 100):
+def get_tradesmen(db: Client, grad: str = None, kategorija_id: UUID = None, verified: bool = None, skip: int = 0, limit: int = 100):
     query = db.table('tradesmen').select('*, category_id:categories(*)')
     if grad:
         query = query.ilike('grad', f"%{grad}%")
     if kategorija_id:
         query = query.eq('kategorija_id', str(kategorija_id))
+    if verified is not None:
+        query = query.eq('verified', verified)
         
-    response = query.range(skip, skip + limit - 1).execute()
+    response = query.order('prosjecna_ocjena', desc=True).range(skip, skip + limit - 1).execute()
     return response.data
 
 def get_tradesman(db: Client, tradesman_id: UUID):
