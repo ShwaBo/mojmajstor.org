@@ -61,6 +61,13 @@ def read_tradesman(tradesman_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Majstor nije pronađen")
     return db_tradesman
 
+@app.post("/tradesmen/{tradesman_id}/click")
+def increment_tradesman_clicks(tradesman_id: UUID, db: Session = Depends(get_db)):
+    result = crud.increment_tradesman_clicks(db, tradesman_id=tradesman_id)
+    if result is None:
+        raise HTTPException(status_code=404, detail="Majstor nije pronađen")
+    return {"message": "Click recorded successfully", "new_clicks": result.get("broj_klikova")}
+
 from auth import require_auth
 
 @app.post("/reviews/", response_model=schemas.ReviewResponse)

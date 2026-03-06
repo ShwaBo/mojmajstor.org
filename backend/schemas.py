@@ -56,6 +56,7 @@ class TradesmanBase(BaseModel):
     verified: Optional[bool] = False
     lat: Optional[float] = None
     lng: Optional[float] = None
+    broj_klikova: Optional[int] = 0
 
 class TradesmanCreate(TradesmanBase):
     korisnik_id: Optional[UUID] = None

@@ -313,7 +313,16 @@ function SearchResultsContent() {
                                                 {result.telefon && (
                                                     <div className="flex items-center">
                                                         <Phone className="w-4 h-4 mr-1 text-gray-400" />
-                                                        <a href={`tel:${result.telefon}`} className="hover:text-blue-600 hover:underline">{result.telefon}</a>
+                                                        <a
+                                                            href={`tel:${result.telefon}`}
+                                                            className="hover:text-blue-600 hover:underline"
+                                                            onClick={(e) => {
+                                                                // Fire and forget tracking endpoint
+                                                                fetchData(`/tradesmen/${result.id}/click`, { method: "POST" }).catch(err => console.error("Click tracking failed:", err));
+                                                            }}
+                                                        >
+                                                            {result.telefon}
+                                                        </a>
                                                     </div>
                                                 )}
 

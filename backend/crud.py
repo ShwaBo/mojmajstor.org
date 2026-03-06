@@ -18,6 +18,18 @@ def get_tradesman(db: Client, tradesman_id: UUID):
     response = db.table('tradesmen').select('*, category_id:categories(*)').eq('id', str(tradesman_id)).single().execute()
     return response.data if hasattr(response, 'data') else None
 
+def increment_tradesman_clicks(db: Client, tradesman_id: UUID):
+    # Fetch current value
+    tradesman = db.table('tradesmen').select('broj_klikova').eq('id', str(tradesman_id)).single().execute()
+    if not hasattr(tradesman, 'data') or not tradesman.data:
+        return None
+    
+    current_clicks = tradesman.data.get('broj_klikova') or 0
+    new_clicks = current_clicks + 1
+    
+    response = db.table('tradesmen').update({"broj_klikova": new_clicks}).eq('id', str(tradesman_id)).execute()
+    return response.data[0] if response.data else None
+
 def create_tradesman(db: Client, tradesman: schemas.TradesmanCreate):
     response = db.table('tradesmen').insert(tradesman.model_dump()).execute()
     return response.data[0] if response.data else None
