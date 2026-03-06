@@ -13,10 +13,44 @@ from scraper import run_scraper
 # Create tables if they don't exist (useful for MVP, though Supabase is already initialized)
 # models.Base.metadata.create_all(bind=engine)
 
+import os
+import psycopg2
+from contextlib import asynccontextmanager
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Automatska migracija za dodavanje nedostajucih kolona u Supabase bazi
+    db_url = os.getenv("DATABASE_URL")
+    if db_url:
+        print("Pokrećem automatsku migraciju baze podataka preko DATABASE_URL...")
+        if "?" not in db_url:
+            db_url += "?sslmode=require"
+        else:
+            db_url += "&sslmode=require"
+            
+        try:
+            conn = psycopg2.connect(db_url, connect_timeout=10)
+            cur = conn.cursor()
+            
+            # Dodavanje kolone 'broj_klikova'
+            cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='tradesmen' and column_name='broj_klikova';")
+            if cur.fetchone() is None:
+                cur.execute("ALTER TABLE tradesmen ADD COLUMN broj_klikova integer DEFAULT 0;")
+                conn.commit()
+                print("Uspješno dodana nova kolona 'broj_klikova' u tradesmen tabelu!")
+            
+            cur.close()
+            conn.close()
+        except Exception as e:
+            print(f"Greška pri automatskom ažuriranju baze: {e}")
+            
+    yield
+
 app = FastAPI(
     title="mojmajstor.org API",
     description="API za pronalaženje majstora u BiH",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
