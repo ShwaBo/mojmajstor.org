@@ -341,10 +341,10 @@ function SearchResultsContent() {
                                             </div>
 
                                             <div className="flex flex-wrap items-center justify-center sm:justify-start text-gray-500 text-sm gap-4 mt-2">
-                                                {result.grad && (
+                                                {(result.adresa || result.grad) && (
                                                     <div className="flex items-center">
                                                         <MapPin className="w-4 h-4 mr-1 text-gray-400" />
-                                                        {result.adresa ? `${result.adresa}, ${result.grad}` : result.grad}
+                                                        {result.adresa || result.grad}
                                                     </div>
                                                 )}
 
