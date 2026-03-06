@@ -13,7 +13,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Star, Wrench } from "lucide-react";
+import { MapPin, Star, Wrench, Loader2 } from "lucide-react";
 
 const GRADOVI = [
     // FEDERACIJA BOSNE I HERCEGOVINE (FBiH)
@@ -59,17 +59,59 @@ function SearchResultsContent() {
     const [tradesmen, setTradesmen] = useState<any[]>([]);
     const [categoriesList, setCategoriesList] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [skip, setSkip] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const LIMIT = 30;
+
+    const fetchTradesmenData = async (currentSkip: number, isLoadMore: boolean = false) => {
+        try {
+            if (isLoadMore) setLoadingMore(true);
+            else setLoading(true);
+
+            const params = new URLSearchParams();
+            if (grad && grad !== "svi") params.append("grad", grad);
+            if (kategorija && kategorija !== "sve") params.append("kategorija_id", kategorija);
+            params.append("skip", currentSkip.toString());
+            params.append("limit", LIMIT.toString());
+
+            const data = await fetchData(`/tradesmen/?${params.toString()}`);
+
+            if (data.length < LIMIT) {
+                setHasMore(false);
+            } else {
+                setHasMore(true);
+            }
+
+            if (isLoadMore) {
+                setTradesmen(prev => {
+                    const existingIds = new Set(prev.map(t => t.id));
+                    const newTradesmen = data.filter((t: any) => !existingIds.has(t.id));
+                    return [...prev, ...newTradesmen];
+                });
+            } else {
+                setTradesmen(data);
+            }
+            setError(null);
+        } catch (err) {
+            console.error("Error fetching tradesmen", err);
+            setError("Nažalost, nismo uspjeli učitati majstore. Pokušajte ponovo.");
+        } finally {
+            setLoading(false);
+            setLoadingMore(false);
+        }
+    };
 
     useEffect(() => {
-        const loadTradesmen = async () => {
+        const loadInitial = async () => {
             try {
                 setLoading(true);
-                // In a production setup, we'd map "kategorija" slug to a UUID here
-                // For now, if the user picks a city, we pass it. If there were a categorija mapping, we'd add it too.
                 const params = new URLSearchParams();
                 if (initGrad && initGrad !== "svi") params.append("grad", initGrad);
-                // Categorija mapping would go here if supported by the FastAPI directly via slug 
+                if (initKategorija && initKategorija !== "sve") params.append("kategorija_id", initKategorija);
+                params.append("skip", "0");
+                params.append("limit", LIMIT.toString());
 
                 const [data, cats] = await Promise.all([
                     fetchData(`/tradesmen/?${params.toString()}`),
@@ -78,27 +120,20 @@ function SearchResultsContent() {
 
                 setTradesmen(data);
                 setCategoriesList(cats);
+                if (data.length < LIMIT) setHasMore(false);
                 setError(null);
             } catch (err) {
-                console.error("Error fetching tradesmen", err);
-                setError("Nažalost, nismo uspjeli učitati majstore. Pokušajte ponovo.");
+                console.error("Error loading initial data", err);
+                setError("Greška pri učitavanju. Osvježite stranicu.");
             } finally {
                 setLoading(false);
             }
         };
-
-        loadTradesmen();
+        loadInitial();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    // We apply local filtering on top of DB filtering for categories (as backend only accepts UUIDs for categories right now)
-    const filteredResults = tradesmen.filter(r => {
-        // Our categories now use UUIDs or string match depending on legacy logic. 
-        // We match by name if the user selected a category ID since the ID selects standard dropdown values.
-        if (kategorija && kategorija !== "sve") {
-            return r.kategorija_id === kategorija || r.category_id?.id === kategorija;
-        }
-        return true;
-    });
+    const filteredResults = tradesmen;
 
     return (
         <div className="flex flex-col md:flex-row gap-8">
@@ -161,6 +196,9 @@ function SearchResultsContent() {
                             // I will do an inline update of window history for simplicity, 
                             // but let's actually just let the state drive the UI for now, and update the URL silently.
                             window.history.replaceState(null, '', `?${params.toString()}`);
+
+                            setSkip(0);
+                            fetchTradesmenData(0, false);
                         }}>
                             Primijeni filtere
                         </Button>
@@ -176,7 +214,7 @@ function SearchResultsContent() {
                             <span>Učitavanje rezultata...</span>
                         ) : (
                             <>
-                                Pronađeno <span className="font-bold text-gray-900">{filteredResults.length}</span> rezultata
+                                Pronađeno <span className="font-bold text-gray-900">{filteredResults.length}{hasMore ? '+' : ''}</span> rezultata
                                 {kategorija && kategorija !== "sve" && <span> za <span className="font-bold capitalize">{categoriesList.find(c => c.id === kategorija)?.naziv}</span></span>}
                                 {grad && grad !== "svi" && <span> u <span className="font-bold capitalize">{grad}</span></span>}
                             </>
@@ -202,7 +240,23 @@ function SearchResultsContent() {
                             <CardContent className="space-y-3">
                                 <h3 className="text-xl font-medium text-gray-900">Nema rezultata</h3>
                                 <p className="text-gray-500">Nismo pronašli majstore koji odgovaraju vašim kriterijima.</p>
-                                <Button variant="outline" onClick={() => { setKategorija("sve"); setGrad("svi"); }}>Očisti filtere</Button>
+                                <Button variant="outline" onClick={() => {
+                                    setKategorija("sve");
+                                    setGrad("svi");
+                                    setSkip(0);
+
+                                    const params = new URLSearchParams();
+                                    params.append("skip", "0");
+                                    params.append("limit", LIMIT.toString());
+
+                                    setLoading(true);
+                                    fetchData(`/tradesmen/?${params.toString()}`).then(data => {
+                                        setTradesmen(data);
+                                        setHasMore(data.length >= LIMIT);
+                                        setLoading(false);
+                                        window.history.replaceState(null, '', `?`);
+                                    }).catch(() => setLoading(false));
+                                }}>Očisti filtere</Button>
                             </CardContent>
                         </Card>
                     ) : (
@@ -259,6 +313,29 @@ function SearchResultsContent() {
                         ))
                     )}
                 </div>
+
+                {hasMore && tradesmen.length > 0 && !loading && (
+                    <div className="flex justify-center mt-8 pb-8">
+                        <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => {
+                                const newSkip = skip + LIMIT;
+                                setSkip(newSkip);
+                                fetchTradesmenData(newSkip, true);
+                            }}
+                            disabled={loadingMore}
+                            className="bg-white border-2 hover:bg-gray-50 text-gray-700"
+                        >
+                            {loadingMore ? (
+                                <>
+                                    <Loader2 className="w-5 h-5 mr-3 text-blue-600 animate-spin" />
+                                    Učitavanje...
+                                </>
+                            ) : "Prikaži više rezultata"}
+                        </Button>
+                    </div>
+                )}
             </main>
         </div>
     );
