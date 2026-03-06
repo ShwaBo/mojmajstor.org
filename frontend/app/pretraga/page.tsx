@@ -47,6 +47,18 @@ const GRADOVI = [
     "Brčko"
 ].sort((a, b) => a.localeCompare(b, 'hr'));
 
+// Helper to reliably sanitize and map UI category names to URL slugs
+function slugify(text: string) {
+    if (!text) return "";
+    return text.toLowerCase()
+        .replace(/č/g, "c")
+        .replace(/ć/g, "c")
+        .replace(/š/g, "s")
+        .replace(/ž/g, "z")
+        .replace(/đ/g, "d")
+        .replace(/[^a-z0-9]+/g, "");
+}
+
 function SearchResultsContent() {
     const searchParams = useSearchParams();
     const initKategorija = searchParams.get("kategorija") || "sve";
@@ -109,20 +121,46 @@ function SearchResultsContent() {
         const loadInitial = async () => {
             try {
                 setLoading(true);
+
+                // Fetch dictionary first to map incoming strings/slugs to valid UUIDs
+                const cats = await fetchData('/categories/');
+                setCategoriesList(cats);
+
+                let actualKategorijaId = initKategorija;
+
+                if (initKategorija && initKategorija !== "sve") {
+                    // Check if it's already a UUID (e.g. from a shared URL or sidebar select)
+                    const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(initKategorija);
+
+                    if (!isUUID) {
+                        const targetSlug = initKategorija.toLowerCase().replace(/[^a-z0-9]/g, "");
+                        const matchedCat = cats.find((c: any) => {
+                            const catNameSlug = slugify(c.naziv);
+                            // Relaxed matching for compound entries (e.g "Agencija za ciscenje" matching "ciscenje")
+                            return catNameSlug.includes(targetSlug) || targetSlug.includes(catNameSlug);
+                        });
+
+                        if (matchedCat) {
+                            actualKategorijaId = matchedCat.id;
+                            setKategorija(matchedCat.id);
+                        } else {
+                            // Fallback if no matching DB category was found, prevents UUID 422 crash
+                            actualKategorijaId = "sve";
+                            setKategorija("sve");
+                        }
+                    }
+                }
+
                 const params = new URLSearchParams();
                 if (initGrad && initGrad !== "svi") params.append("grad", initGrad);
-                if (initKategorija && initKategorija !== "sve") params.append("kategorija_id", initKategorija);
+                if (actualKategorijaId && actualKategorijaId !== "sve") params.append("kategorija_id", actualKategorijaId);
                 if (initTip === "verifikovani") params.append("verified", "true");
                 params.append("skip", "0");
                 params.append("limit", LIMIT.toString());
 
-                const [data, cats] = await Promise.all([
-                    fetchData(`/tradesmen/?${params.toString()}`),
-                    fetchData('/categories/')
-                ]);
+                const data = await fetchData(`/tradesmen/?${params.toString()}`);
 
                 setTradesmen(data);
-                setCategoriesList(cats);
                 if (data.length < LIMIT) setHasMore(false);
                 setError(null);
             } catch (err) {
